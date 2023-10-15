@@ -24,6 +24,7 @@ interface ModalProps {
   publicSignals: string;
   onBackClick: () => void;
   status: ProofGenerationStatus;
+  buttonTitle: string;
   isSubmitProcessing: boolean;
   handleSubmitVerificationClick?: () => void;
 }
@@ -34,6 +35,7 @@ export const Modal: React.FC<ModalProps> = ({
   publicSignals,
   onBackClick,
   status,
+  buttonTitle,
   isSubmitProcessing,
   handleSubmitVerificationClick = () => {},
 }) => {
@@ -107,23 +109,26 @@ export const Modal: React.FC<ModalProps> = ({
     if (!isProvingTypeFast) {
       verificationStepRows.push(
         <VerificationStepRow
-          stepType={VerificationStepType.DOWNLOAD}
-          stepState={downloadStepState}
+          key={0}
+          type={VerificationStepType.DOWNLOAD}
+          progress={downloadStepState}
         />
       );
     }
 
     verificationStepRows.push(
       <VerificationStepRow
-        stepType={VerificationStepType.PROVE}
-        stepState={proveStepState}
+        key={1}
+        type={VerificationStepType.PROVE}
+        progress={proveStepState}
       />
     );
 
     verificationStepRows.push(
       <VerificationStepRow
-        stepType={VerificationStepType.VERIFY}
-        stepState={verificationStepState}
+        key={2}
+        type={VerificationStepType.VERIFY}
+        progress={verificationStepState}
       />
     );
 
@@ -151,8 +156,8 @@ export const Modal: React.FC<ModalProps> = ({
 
           <LabeledSwitch
             switchChecked={shouldShowProofAndSignals}
-            checkedLabel={"Show"}
-            uncheckedLabel={"Hide"}
+            checkedLabel={"Hide"}
+            uncheckedLabel={"Show"}
             helperText={PROOF_TOOLTIP}
             onSwitchChange={(checked: boolean) =>
               setShouldShowProofAndSignals(checked)
