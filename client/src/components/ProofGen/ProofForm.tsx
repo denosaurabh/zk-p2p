@@ -1,29 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import styled from 'styled-components';
+import React, { useEffect, useState } from "react";
+import styled from "styled-components";
 import {
   CircuitType,
   generate_inputs,
   insert13Before10,
-  ICircuitInputs
-} from '@zkp2p/circuits-circom/scripts/generate_input';
-import { wrap } from 'comlink';
+  ICircuitInputs,
+} from "@zkp2p/circuits-circom/scripts/generate_input";
+import { wrap } from "comlink";
 
 import { Button } from "../Button";
 import { Col } from "../legacy/Layout";
-import { LabeledTextArea } from '../legacy/LabeledTextArea';
+import { LabeledTextArea } from "../legacy/LabeledTextArea";
 // import { ProgressBar } from "../legacy/ProgressBar";
 import { NumberedStep } from "../common/NumberedStep";
 import { DragAndDropTextBox } from "../common/DragAndDropTextBox";
 import { LabeledSwitch } from "../common/LabeledSwitch";
-import { ProofGenerationStatus } from  "./types";
-import { Modal } from '@components/modals/Modal';
+import { ProofGenerationStatus } from "./types";
+import { Modal } from "@components/modals/Modal";
 
 import { PLACEHOLDER_EMAIL_BODY, HOSTED_FILES_PATH } from "@helpers/constants";
 import { INPUT_MODE_TOOLTIP } from "@helpers/tooltips";
 import { downloadProofFiles } from "@helpers/zkp";
-import useProofGenSettings from '@hooks/useProofGenSettings';
-import useRemoteProofGen from '@hooks/useRemoteProofGen';
-
+import useProofGenSettings from "@hooks/useProofGenSettings";
+import useRemoteProofGen from "@hooks/useRemoteProofGen";
 
 interface ProofGenerationFormProps {
   instructions: string;
@@ -38,7 +37,7 @@ interface ProofGenerationFormProps {
   isSubmitProcessing: boolean;
   handleSubmitVerificationClick?: () => void;
 }
- 
+
 export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
   instructions,
   circuitType,
@@ -50,17 +49,14 @@ export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
   setProof,
   setPublicSignals,
   isSubmitProcessing,
-  handleSubmitVerificationClick
+  handleSubmitVerificationClick,
 }) => {
   /*
    * Context
    */
-  const {
-    isProvingTypeFast,
-    isInputModeDrag,
-    setIsInputModeDrag,
-  } = useProofGenSettings();
-  
+  const { isProvingTypeFast, isInputModeDrag, setIsInputModeDrag } =
+    useProofGenSettings();
+
   /*
    * State
    */
@@ -70,7 +66,8 @@ export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
 
   const [status, setStatus] = useState<ProofGenerationStatus>("not-started");
 
-  const [shouldShowVerificationModal, setShouldShowVerificationModal] = useState<boolean>(false);
+  const [shouldShowVerificationModal, setShouldShowVerificationModal] =
+    useState<boolean>(false);
 
   // const [stopwatch, setStopwatch] = useState<Record<string, number>>({
   //   startedDownloading: 0,
@@ -100,7 +97,7 @@ export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
     data: remoteGenerateProofResponse,
     loading: isRemoteGenerateProofLoading,
     // error: remoteGenerateProofError,
-    fetchData: remoteGenerateProof
+    fetchData: remoteGenerateProof,
   } = useRemoteProofGen({
     emailType: remoteProofGenEmailType,
     emailBody: emailFull,
@@ -109,7 +106,7 @@ export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
 
   useEffect(() => {
     if (remoteGenerateProofResponse) {
-      console.log('Data:', remoteGenerateProofResponse);
+      console.log("Data:", remoteGenerateProofResponse);
       setStatus("verifying-proof");
 
       setProof(remoteGenerateProofResponse.proof);
@@ -129,11 +126,11 @@ export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
     setShouldShowVerificationModal(true);
 
     if (isProvingTypeFast) {
-      console.log('Generating fast proof...');
-      remoteGenerateProof()
+      console.log("Generating fast proof...");
+      remoteGenerateProof();
       setStatus("generating-proof");
     } else {
-      console.log('Generating private proof...');
+      console.log("Generating private proof...");
       handleGenerateProofClick();
     }
   };
@@ -153,7 +150,9 @@ export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
     setStatus("generating-input");
 
     // console.log("emailFull at handleGenerateProofClick", emailFull);
-    const formattedArray = await insert13Before10(Uint8Array.from(Buffer.from(emailFull)));
+    const formattedArray = await insert13Before10(
+      Uint8Array.from(Buffer.from(emailFull))
+    );
 
     // Due to a quirk in carriage return parsing in JS, we need to manually edit carriage returns to match DKIM parsing
     // console.log("formattedArray", formattedArray)
@@ -166,7 +165,7 @@ export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
         Buffer.from(formattedArray.buffer),
         circuitType,
         circuitInputs,
-        "1", // Nonce, used for server side proving
+        "1" // Nonce, used for server side proving
       );
     } catch (e) {
       console.log("Error generating input", e);
@@ -184,7 +183,6 @@ export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
     setStatus("downloading-proof-files");
     await downloadProofFiles(HOSTED_FILES_PATH, circuitRemoteFilePath, () => {
       // no-op
-
       // setDownloadProgress((p) => p + 1);
     });
     console.timeEnd("zk-dl");
@@ -198,9 +196,16 @@ export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
     setStatus("generating-proof");
     console.log("Starting proof generation");
 
-    const worker = new Worker('./ProvingWorker', { name: 'runGenerateProofWorker', type: 'module' })
-    const { generateProof } = wrap<import('./ProvingWorker').RunGenerateProofWorker>(worker)
-    const { proof, publicSignals } = await generateProof(input, circuitRemoteFilePath);
+    const worker = new Worker("./ProvingWorker", {
+      name: "runGenerateProofWorker",
+      type: "module",
+    });
+    const { generateProof } =
+      wrap<import("./ProvingWorker").RunGenerateProofWorker>(worker);
+    const { proof, publicSignals } = await generateProof(
+      input,
+      circuitRemoteFilePath
+    );
 
     console.log("Finished proof generation");
     console.timeEnd("zk-gen");
@@ -210,7 +215,7 @@ export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
       Set proof
     */
     setProof(JSON.stringify(proof));
-    
+
     /*
       Set public signals
     */
@@ -280,22 +285,19 @@ export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
 
   return (
     <Container>
-      {
-        shouldShowVerificationModal && (
-          <Modal
-            title={"Verify Email"}
-            proof={proof}
-            publicSignals={publicSignals}
-            status={status}
-            onBackClick={handleModalBackClicked}
-            isSubmitProcessing={isSubmitProcessing}
-            handleSubmitVerificationClick={handleSubmitVerificationClick} />
-        ) 
-      }
+      {shouldShowVerificationModal && (
+        <Modal
+          title={"Proving Email"}
+          proof={proof}
+          publicSignals={publicSignals}
+          status={status}
+          onBackClick={handleModalBackClicked}
+          isSubmitProcessing={isSubmitProcessing}
+          handleSubmitVerificationClick={handleSubmitVerificationClick}
+        />
+      )}
 
-      <NumberedStep>
-        {instructions}
-      </NumberedStep>
+      <NumberedStep>{instructions}</NumberedStep>
 
       <EmailTitleRowAndTextAreaContainer>
         <TitleAndEmailSwitchRowContainer>
@@ -310,9 +312,7 @@ export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
         </TitleAndEmailSwitchRowContainer>
 
         {isInputModeDrag ? (
-          <DragAndDropTextBox
-            onFileDrop={onFileDrop}
-          />
+          <DragAndDropTextBox onFileDrop={onFileDrop} />
         ) : (
           <LabeledTextArea
             label=""
@@ -325,7 +325,7 @@ export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
           />
         )}
       </EmailTitleRowAndTextAreaContainer>
-      
+
       <ButtonContainer>
         <Button
           disabled={emailFull.length === 0}
@@ -335,7 +335,7 @@ export const ProofGenerationForm: React.FC<ProofGenerationFormProps> = ({
           Verify Email
         </Button>
       </ButtonContainer>
-      
+
       {/* { isProofGenerationStarted() && <ProofGenerationStatus />} */}
     </Container>
   );

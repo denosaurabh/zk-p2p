@@ -1,25 +1,28 @@
 import React, { useMemo, useState } from "react";
-import styled from 'styled-components';
-import { ArrowLeft } from 'react-feather';
+import styled from "styled-components";
+import { ArrowLeft } from "react-feather";
 
-import { ThemedText } from '../../theme/text'
+import { ThemedText } from "../../theme/text";
 import { LabeledSwitch } from "../common/LabeledSwitch";
-import { Overlay } from '@components/modals/Overlay'
-import { TitleCenteredRow } from '@components/layouts/Row'
+import { Overlay } from "@components/modals/Overlay";
+import { TitleCenteredRow } from "@components/layouts/Row";
 import { PROOF_TOOLTIP } from "@helpers/tooltips";
 import useProofGenSettings from "@hooks/useProofGenSettings";
-import { ProofGenerationStatus } from  "../ProofGen/types";
+import { ProofGenerationStatus } from "../ProofGen/types";
 
 import { Button } from "../Button";
-import { VerificationStepRow, VerificationState, VerificationStepType } from "./VerificationStepRow";
-import { LabeledTextArea } from '../legacy/LabeledTextArea';
-
+import {
+  VerificationStepRow,
+  VerificationState,
+  VerificationStepType,
+} from "./VerificationStepRow";
+import { LabeledTextArea } from "../legacy/LabeledTextArea";
 
 interface ModalProps {
   title: string;
   proof: string;
   publicSignals: string;
-  onBackClick: () => void
+  onBackClick: () => void;
   status: ProofGenerationStatus;
   isSubmitProcessing: boolean;
   handleSubmitVerificationClick?: () => void;
@@ -32,7 +35,7 @@ export const Modal: React.FC<ModalProps> = ({
   onBackClick,
   status,
   isSubmitProcessing,
-  handleSubmitVerificationClick = () => {}
+  handleSubmitVerificationClick = () => {},
 }) => {
   /*
    * Context
@@ -44,7 +47,8 @@ export const Modal: React.FC<ModalProps> = ({
    * State
    */
 
-  const [shouldShowProofAndSignals, setShouldShowProofAndSignals] = useState<boolean>(false);
+  const [shouldShowProofAndSignals, setShouldShowProofAndSignals] =
+    useState<boolean>(false);
 
   /*
    * Handlers
@@ -52,7 +56,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   const handleOverlayClick = () => {
     onBackClick();
-  }
+  };
 
   /*
    * Helpers
@@ -67,12 +71,12 @@ export const Modal: React.FC<ModalProps> = ({
    */
 
   const renderVerificationSteps = () => {
-    console.log('Status update: ', status);
+    console.log("Status update: ", status);
 
     let downloadStepState = VerificationState.DEFAULT;
-    let proveStepState = VerificationState.DEFAULT; 
+    let proveStepState = VerificationState.DEFAULT;
     let verificationStepState = VerificationState.DEFAULT;
-    
+
     switch (status) {
       case "not-started":
       case "generating-input":
@@ -99,7 +103,7 @@ export const Modal: React.FC<ModalProps> = ({
     }
 
     const verificationStepRows = [];
-    
+
     if (!isProvingTypeFast) {
       verificationStepRows.push(
         <VerificationStepRow
@@ -122,25 +126,26 @@ export const Modal: React.FC<ModalProps> = ({
         stepState={verificationStepState}
       />
     );
-    
+
     return verificationStepRows;
   };
 
   return (
     <ModalAndOverlayContainer>
-      <Overlay onClick={handleOverlayClick}/>
+      <Overlay onClick={handleOverlayClick} />
 
       <ModalContainer>
         <TitleCenteredRow>
           <button
             onClick={handleOverlayClick}
-            style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-            
-            <StyledArrowLeft/>
+            style={{ background: "none", border: "none", cursor: "pointer" }}
+          >
+            <StyledArrowLeft />
           </button>
 
-          <ThemedText.HeadlineSmall style={{ flex: '1', margin: 'auto', textAlign: 'center' }}>
+          <ThemedText.HeadlineSmall
+            style={{ flex: "1", margin: "auto", textAlign: "center" }}
+          >
             {title}
           </ThemedText.HeadlineSmall>
 
@@ -149,30 +154,34 @@ export const Modal: React.FC<ModalProps> = ({
             checkedLabel={"Show"}
             uncheckedLabel={"Hide"}
             helperText={PROOF_TOOLTIP}
-            onSwitchChange={(checked: boolean) => setShouldShowProofAndSignals(checked)}/>
+            onSwitchChange={(checked: boolean) =>
+              setShouldShowProofAndSignals(checked)
+            }
+          />
         </TitleCenteredRow>
 
         <VerificationStepsContainer>
           {renderVerificationSteps()}
         </VerificationStepsContainer>
 
-        { shouldShowProofAndSignals && (
+        {shouldShowProofAndSignals && (
           <ProofAndSignalsContainer>
             <LabeledTextArea
               label="Proof Output"
               value={proof}
               disabled={true}
-              height={"12vh"} />
+              height={"12vh"}
+            />
 
             <LabeledTextArea
               label="Public Signals"
               value={publicSignals}
               disabled={true}
               height={"12vh"}
-              secret />
+              secret
+            />
           </ProofAndSignalsContainer>
-          )
-        }
+        )}
 
         <Button
           disabled={isSubmitVerificationButtonDisabled || isSubmitProcessing}
@@ -180,7 +189,7 @@ export const Modal: React.FC<ModalProps> = ({
           onClick={handleSubmitVerificationClick}
           fullWidth={true}
         >
-          Complete Ramp
+          Complete Registration
         </Button>
       </ModalContainer>
     </ModalAndOverlayContainer>
@@ -206,7 +215,7 @@ const ModalContainer = styled.div`
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 1.25rem;
-  background: #0D111C;
+  background: #0d111c;
   justify-content: space-between;
   align-items: center;
   z-index: 20;
@@ -216,7 +225,7 @@ const ModalContainer = styled.div`
 `;
 
 const StyledArrowLeft = styled(ArrowLeft)`
-  color: #FFF;
+  color: #fff;
 `;
 
 const VerificationStepsContainer = styled.div`

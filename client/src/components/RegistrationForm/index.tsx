@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import styled from 'styled-components/macro'
+import React, { useState } from "react";
+import styled from "styled-components/macro";
 
 import { ExistingRegistration } from "./ExistingRegistration";
 import { NewRegistration } from "./NewRegistration";
 
- 
 export const RegistrationForm: React.FC = () => {
   /*
    * State
@@ -16,25 +15,22 @@ export const RegistrationForm: React.FC = () => {
    */
   const handleUpdateClick = () => {
     setIsNewRegistration(true);
-  }
+  };
 
   const handleBackClick = () => {
     setIsNewRegistration(false);
-  }
+  };
 
   /*
     Component
   */
+
   return (
     <Wrapper>
       {!isNewRegistration ? (
-        <ExistingRegistration
-          handleNewRegistrationClick={handleUpdateClick}
-        />
+        <ExistingRegistration handleNewRegistrationClick={handleUpdateClick} />
       ) : (
-        <NewRegistration
-          handleBackClick={handleBackClick}
-        />
+        <NewRegistration handleBackClick={handleBackClick} />
       )}
     </Wrapper>
   );

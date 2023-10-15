@@ -1,51 +1,54 @@
-import React, { useEffect, useState } from 'react';
-import styled from 'styled-components/macro'
-import { ArrowLeft } from 'react-feather';
-import { CircuitType } from '@zkp2p/circuits-circom/scripts/generate_input';
+import React, { useEffect, useState } from "react";
+import styled from "styled-components/macro";
+import { ArrowLeft } from "react-feather";
+import { CircuitType } from "@zkp2p/circuits-circom/scripts/generate_input";
 import {
   useContractWrite,
   usePrepareContractWrite,
-  useWaitForTransaction
- } from 'wagmi'
+  useWaitForTransaction,
+} from "wagmi";
 
-import { TitleCenteredRow } from '../layouts/Row'
-import { ThemedText } from '../../theme/text'
+import { TitleCenteredRow } from "../layouts/Row";
+import { ThemedText } from "../../theme/text";
 import { ProofGenerationForm } from "../ProofGen/ProofForm";
 import { LabeledSwitch } from "../common/LabeledSwitch";
-import { REGISTRATION_KEY_FILE_NAME, RemoteProofGenEmailTypes } from "@helpers/constants";
-import { PROVING_TYPE_TOOLTIP, PROOF_FORM_REGISTRATION_INSTRUCTIONS } from "@helpers/tooltips";
+import {
+  REGISTRATION_KEY_FILE_NAME,
+  RemoteProofGenEmailTypes,
+} from "@helpers/constants";
+import {
+  PROVING_TYPE_TOOLTIP,
+  PROOF_FORM_REGISTRATION_INSTRUCTIONS,
+} from "@helpers/tooltips";
 import { reformatProofForChain } from "@helpers/submitProof";
-import useProofGenSettings from '@hooks/useProofGenSettings';
-import useSmartContracts from '@hooks/useSmartContracts';
-import useRegistration from '@hooks/useRegistration';
-
-
+import useProofGenSettings from "@hooks/useProofGenSettings";
+import useSmartContracts from "@hooks/useSmartContracts";
+import useRegistration from "@hooks/useRegistration";
 
 interface NewRegistrationProps {
   handleBackClick: () => void;
 }
- 
+
 export const NewRegistration: React.FC<NewRegistrationProps> = ({
-  handleBackClick
+  handleBackClick,
 }) => {
   /*
    * Context
    */
 
+  const { isRegistered } = useRegistration();
+
   const { isProvingTypeFast, setIsProvingTypeFast } = useProofGenSettings();
-  const {
-    rampAddress,
-    rampAbi
-  } = useSmartContracts();
+  const { rampAddress, rampAbi } = useSmartContracts();
   const { refetchRampAccount } = useRegistration();
 
   // ----- transaction state -----
-  const [proof, setProof] = useState<string>('');
+  const [proof, setProof] = useState<string>("");
   // const [proof, setProof] = useState<string>(
   //   JSON.stringify()
   // );
-  
-  const [publicSignals, setPublicSignals] = useState<string>('');
+
+  const [publicSignals, setPublicSignals] = useState<string>("");
   // const [publicSignals, setPublicSignals] = useState<string>(
   //   JSON.stringify()
   // );
@@ -54,7 +57,10 @@ export const NewRegistration: React.FC<NewRegistrationProps> = ({
    * State
    */
 
-  const [shouldConfigureRegistrationWrite, setShouldConfigureRegistrationWrite] = useState<boolean>(false);
+  const [
+    shouldConfigureRegistrationWrite,
+    setShouldConfigureRegistrationWrite,
+  ] = useState<boolean>(false);
 
   /*
     Contract Writes
@@ -63,12 +69,10 @@ export const NewRegistration: React.FC<NewRegistrationProps> = ({
   //
   // register(uint256[2] memory _a, uint256[2][2] memory _b, uint256[2] memory _c, uint256[msgLen] memory _signals)
   //
-  const {
-    config: writeSubmitRegistrationConfig
-  } = usePrepareContractWrite({
+  const { config: writeSubmitRegistrationConfig } = usePrepareContractWrite({
     address: rampAddress,
     abi: rampAbi,
-    functionName: 'register',
+    functionName: "register",
     args: [
       ...reformatProofForChain(proof),
       publicSignals ? JSON.parse(publicSignals) : null,
@@ -76,22 +80,20 @@ export const NewRegistration: React.FC<NewRegistrationProps> = ({
     onError: (error: { message: any }) => {
       console.error(error.message);
     },
-    enabled: shouldConfigureRegistrationWrite
+    enabled: shouldConfigureRegistrationWrite,
   });
 
   const {
     data: submitRegistrationResult,
     isLoading: isSubmitRegistrationLoading,
-    writeAsync: writeSubmitRegistrationAsync
+    writeAsync: writeSubmitRegistrationAsync,
   } = useContractWrite(writeSubmitRegistrationConfig);
 
-  const {
-    isLoading: isSubmitRegistrationMining
-  } = useWaitForTransaction({
+  const { isLoading: isSubmitRegistrationMining } = useWaitForTransaction({
     hash: submitRegistrationResult ? submitRegistrationResult.hash : undefined,
     onSuccess(data) {
-      console.log('writeSubmitRegistrationAsync successful: ', data);
-      
+      console.log("writeSubmitRegistrationAsync successful: ", data);
+
       refetchRampAccount?.();
     },
   });
@@ -126,7 +128,7 @@ export const NewRegistration: React.FC<NewRegistrationProps> = ({
     try {
       await writeSubmitRegistrationAsync?.();
     } catch (error) {
-      console.log('writeSubmitRegistrationAsync failed: ', error);
+      console.log("writeSubmitRegistrationAsync failed: ", error);
     }
   };
 
@@ -136,16 +138,18 @@ export const NewRegistration: React.FC<NewRegistrationProps> = ({
 
   return (
     <Container>
-      <TitleCenteredRow style={{ paddingBottom: '1.5rem' }}>
+      <TitleCenteredRow style={{ paddingBottom: "1.5rem" }}>
         <button
           onClick={handleBackClick}
-          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ background: "none", border: "none", cursor: "pointer" }}
         >
-          <StyledArrowLeft/>
+          <StyledArrowLeft />
         </button>
 
-        <ThemedText.HeadlineSmall style={{ flex: '1', margin: 'auto', textAlign: 'center' }}>
-          Update Registration
+        <ThemedText.HeadlineSmall
+          style={{ flex: "1", margin: "auto", textAlign: "center" }}
+        >
+          {!isRegistered ? "New" : "Update"} Registration
         </ThemedText.HeadlineSmall>
 
         <LabeledSwitch
@@ -168,7 +172,9 @@ export const NewRegistration: React.FC<NewRegistrationProps> = ({
           publicSignals={publicSignals}
           setProof={setProof}
           setPublicSignals={setPublicSignals}
-          isSubmitProcessing={isSubmitRegistrationLoading || isSubmitRegistrationMining}
+          isSubmitProcessing={
+            isSubmitRegistrationLoading || isSubmitRegistrationMining
+          }
           handleSubmitVerificationClick={handleRegistrationSubmit}
         />
       </Body>
@@ -178,13 +184,13 @@ export const NewRegistration: React.FC<NewRegistrationProps> = ({
 
 const Container = styled.div`
   padding: 1.5rem;
-  background-color: #0D111C;
+  background-color: #0d111c;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.2);
 `;
 
 const StyledArrowLeft = styled(ArrowLeft)`
-  color: #FFF;
+  color: #fff;
 `;
 
 const Body = styled.div`

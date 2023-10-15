@@ -61,7 +61,7 @@ export const PROOF_MODAL_DOWNLOAD_SUBTITLE = `
 `;
 
 export const PROOF_MODAL_PROVE_TITLE = `
-  Verifying Payment
+  Verifying Email
 `;
 
 export const PROOF_MODAL_PROVE_SUBTITLE_PRIVATE = `

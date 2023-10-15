@@ -1,29 +1,28 @@
 import React, { useEffect, useMemo, useState, ChangeEvent } from "react";
-import styled from 'styled-components';
+import styled from "styled-components";
 import {
   useContractWrite,
   usePrepareContractWrite,
-  useWaitForTransaction
-} from 'wagmi'
-import { useNavigate } from 'react-router-dom';
+  useWaitForTransaction,
+} from "wagmi";
+import { useNavigate } from "react-router-dom";
 
 import { Input } from "./Input";
-import { AutoColumn } from '../layouts/Column'
-import { ThemedText } from '../../theme/text'
-import { OnRamperIntentTable } from './OnRamperIntentTable'
-import { Button } from '../Button'
-import { CustomConnectButton } from "../common/ConnectButton"
-import { IndicativeQuote } from '../../contexts/Deposits/types'
+import { AutoColumn } from "../layouts/Column";
+import { ThemedText } from "../../theme/text";
+import { OnRamperIntentTable } from "./OnRamperIntentTable";
+import { Button } from "../Button";
+import { CustomConnectButton } from "../common/ConnectButton";
+import { IndicativeQuote } from "../../contexts/Deposits/types";
 import { DEPOSIT_REFETCH_INTERVAL, ZERO } from "@helpers/constants";
-import { toBigInt, toUsdcString } from '@helpers/units'
-import useAccount from '@hooks/useAccount';
-import useBalances from '@hooks/useBalance';
-import useOnRamperIntents from '@hooks/useOnRamperIntents';
+import { toBigInt, toUsdcString } from "@helpers/units";
+import useAccount from "@hooks/useAccount";
+import useBalances from "@hooks/useBalance";
+import useOnRamperIntents from "@hooks/useOnRamperIntents";
 import useRampState from "@hooks/useRampState";
-import useSmartContracts from '@hooks/useSmartContracts';
-import useLiquidity from '@hooks/useLiquidity';
+import useSmartContracts from "@hooks/useSmartContracts";
+import useLiquidity from "@hooks/useLiquidity";
 import useRegistration from "@hooks/useRegistration";
-
 
 export type SwapQuote = {
   requestedUSDC: string;
@@ -36,7 +35,7 @@ interface SwapModalProps {
 }
 
 const SwapModal: React.FC<SwapModalProps> = ({
-  onIntentTableRowClick
+  onIntentTableRowClick,
 }: SwapModalProps) => {
   const navigate = useNavigate();
 
@@ -47,30 +46,42 @@ const SwapModal: React.FC<SwapModalProps> = ({
   const { isLoggedIn, loggedInEthereumAddress } = useAccount();
   const { usdcBalance } = useBalances();
   const { isRegistered } = useRegistration();
-  const { currentIntentHash, refetchIntentHash, shouldFetchIntentHash } = useOnRamperIntents();
-  const { refetchDeposits, getBestDepositForAmount, shouldFetchDeposits } = useLiquidity();
+  const { currentIntentHash, refetchIntentHash, shouldFetchIntentHash } =
+    useOnRamperIntents();
+  const { refetchDeposits, getBestDepositForAmount, shouldFetchDeposits } =
+    useLiquidity();
   const { rampAddress, rampAbi } = useSmartContracts();
   const { refetchDepositCounter, shouldFetchRampState } = useRampState();
-  
+
   /*
    * State
    */
 
-  const [currentQuote, setCurrentQuote] = useState<SwapQuote>({ requestedUSDC: '', fiatToSend: '' , depositId: ZERO });
+  const [currentQuote, setCurrentQuote] = useState<SwapQuote>({
+    requestedUSDC: "",
+    fiatToSend: "",
+    depositId: ZERO,
+  });
 
-  const [shouldConfigureSignalIntentWrite, setShouldConfigureSignalIntentWrite] = useState<boolean>(false);
+  const [
+    shouldConfigureSignalIntentWrite,
+    setShouldConfigureSignalIntentWrite,
+  ] = useState<boolean>(false);
 
   /*
    * Event Handlers
    */
 
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>, field: keyof SwapQuote) => {
-    if (field === 'requestedUSDC') {
+  const handleInputChange = (
+    event: ChangeEvent<HTMLInputElement>,
+    field: keyof SwapQuote
+  ) => {
+    if (field === "requestedUSDC") {
       const value = event.target.value;
-      const quoteCopy = {...currentQuote}
+      const quoteCopy = { ...currentQuote };
 
       if (value === "") {
-        quoteCopy[field] = '';
+        quoteCopy[field] = "";
         quoteCopy.depositId = ZERO;
 
         setCurrentQuote(quoteCopy);
@@ -79,14 +90,13 @@ const SwapModal: React.FC<SwapModalProps> = ({
         quoteCopy.depositId = ZERO;
 
         setCurrentQuote(quoteCopy);
-      }
-      else if (isValidInput(value)) {
+      } else if (isValidInput(value)) {
         quoteCopy[field] = event.target.value;
 
         setCurrentQuote(quoteCopy);
       }
     } else {
-      const quoteCopy = {...currentQuote}
+      const quoteCopy = { ...currentQuote };
       quoteCopy[field] = event.target.value;
 
       setCurrentQuote(quoteCopy);
@@ -94,7 +104,7 @@ const SwapModal: React.FC<SwapModalProps> = ({
   };
 
   const handleEnterPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       // Prevent the default action
       event.preventDefault();
 
@@ -108,7 +118,7 @@ const SwapModal: React.FC<SwapModalProps> = ({
     event.preventDefault();
 
     // Reset form fields
-    setCurrentQuote({ requestedUSDC: '', fiatToSend: '', depositId: ZERO });
+    setCurrentQuote({ requestedUSDC: "", fiatToSend: "", depositId: ZERO });
   };
 
   /*
@@ -121,31 +131,29 @@ const SwapModal: React.FC<SwapModalProps> = ({
   const { config: writeIntentConfig } = usePrepareContractWrite({
     address: rampAddress,
     abi: rampAbi,
-    functionName: 'signalIntent',
+    functionName: "signalIntent",
     args: [
       currentQuote.depositId,
       toBigInt(currentQuote.requestedUSDC),
-      loggedInEthereumAddress
+      loggedInEthereumAddress,
     ],
     onError: (error: { message: any }) => {
       console.error(error.message);
     },
-    enabled: shouldConfigureSignalIntentWrite
+    enabled: shouldConfigureSignalIntentWrite,
   });
 
   const {
     data: submitIntentResult,
     isLoading: isSubmitIntentLoading,
-    writeAsync: writeSubmitIntentAsync
+    writeAsync: writeSubmitIntentAsync,
   } = useContractWrite(writeIntentConfig);
 
-  const {
-    isLoading: isSubmitIntentMining
-  } = useWaitForTransaction({
+  const { isLoading: isSubmitIntentMining } = useWaitForTransaction({
     hash: submitIntentResult ? submitIntentResult.hash : undefined,
     onSuccess(data) {
-      console.log('writeSubmitIntentAsync successful: ', data);
-      
+      console.log("writeSubmitIntentAsync successful: ", data);
+
       refetchIntentHash?.();
     },
   });
@@ -159,17 +167,17 @@ const SwapModal: React.FC<SwapModalProps> = ({
       const intervalId = setInterval(() => {
         refetchIntentHash?.();
       }, DEPOSIT_REFETCH_INTERVAL);
-  
+
       return () => clearInterval(intervalId);
     }
   }, [shouldFetchIntentHash]);
-  
+
   useEffect(() => {
     if (shouldFetchDeposits) {
       const intervalId = setInterval(() => {
         refetchDeposits?.();
       }, DEPOSIT_REFETCH_INTERVAL);
-  
+
       return () => clearInterval(intervalId);
     }
   }, [shouldFetchDeposits]);
@@ -179,7 +187,7 @@ const SwapModal: React.FC<SwapModalProps> = ({
       const intervalId = setInterval(() => {
         refetchDepositCounter?.();
       }, DEPOSIT_REFETCH_INTERVAL);
-  
+
       return () => clearInterval(intervalId);
     }
   }, [shouldFetchRampState]);
@@ -187,10 +195,13 @@ const SwapModal: React.FC<SwapModalProps> = ({
   useEffect(() => {
     const fetchBestDepositForAmount = async () => {
       const requestedUsdcAmount = currentQuote.requestedUSDC;
-      const isValidRequestedUsdcAmount = requestedUsdcAmount && requestedUsdcAmount !== '0';
+      const isValidRequestedUsdcAmount =
+        requestedUsdcAmount && requestedUsdcAmount !== "0";
 
       if (getBestDepositForAmount && isValidRequestedUsdcAmount) {
-        const indicativeQuote: IndicativeQuote = await getBestDepositForAmount(currentQuote.requestedUSDC);
+        const indicativeQuote: IndicativeQuote = await getBestDepositForAmount(
+          currentQuote.requestedUSDC
+        );
         const usdAmountToSend = indicativeQuote.usdAmountToSend;
         const depositId = indicativeQuote.depositId;
 
@@ -198,23 +209,23 @@ const SwapModal: React.FC<SwapModalProps> = ({
         const isDepositIdValid = depositId !== undefined;
 
         if (isAmountToSendValid && isDepositIdValid) {
-          setCurrentQuote(prevState => ({
+          setCurrentQuote((prevState) => ({
             ...prevState,
             fiatToSend: usdAmountToSend,
-            depositId: depositId
+            depositId: depositId,
           }));
 
           const doesNotHaveOpenIntent = currentIntentHash === null;
           if (doesNotHaveOpenIntent) {
-            setShouldConfigureSignalIntentWrite(true);  
+            setShouldConfigureSignalIntentWrite(true);
           } else {
             setShouldConfigureSignalIntentWrite(false);
           }
         } else {
-          setCurrentQuote(prevState => ({
+          setCurrentQuote((prevState) => ({
             ...prevState,
-            fiatToSend: '',
-            depositId: ZERO
+            fiatToSend: "",
+            depositId: ZERO,
           }));
 
           setShouldConfigureSignalIntentWrite(false);
@@ -222,23 +233,23 @@ const SwapModal: React.FC<SwapModalProps> = ({
       } else {
         setShouldConfigureSignalIntentWrite(false);
 
-        setCurrentQuote(prevState => ({
+        setCurrentQuote((prevState) => ({
           ...prevState,
-          fiatToSend: '',
-          depositId: ZERO
+          fiatToSend: "",
+          depositId: ZERO,
         }));
       }
     };
-  
+
     fetchBestDepositForAmount();
   }, [currentQuote.requestedUSDC, getBestDepositForAmount]);
 
-  /* 
+  /*
    * Handlers
-   */ 
+   */
 
   const navigateToRegistrationHandler = () => {
-    navigate('/register');
+    navigate("/register");
   };
 
   /*
@@ -252,9 +263,9 @@ const SwapModal: React.FC<SwapModalProps> = ({
 
   const usdcBalanceLabel = useMemo(() => {
     if (isLoggedIn && usdcBalance !== null) {
-      return `Balance: ${toUsdcString(usdcBalance)}`
+      return `Balance: ${toUsdcString(usdcBalance)}`;
     } else {
-      return '';
+      return "";
     }
   }, [usdcBalance, isLoggedIn]);
 
@@ -262,9 +273,7 @@ const SwapModal: React.FC<SwapModalProps> = ({
     <Wrapper>
       <SwapModalContainer>
         <TitleContainer>
-          <ThemedText.HeadlineSmall>
-            Swap
-          </ThemedText.HeadlineSmall>
+          <ThemedText.HeadlineSmall>Swap</ThemedText.HeadlineSmall>
         </TitleContainer>
 
         <MainContentWrapper>
@@ -272,7 +281,7 @@ const SwapModal: React.FC<SwapModalProps> = ({
             label="Requesting"
             name={`requestedUSDC`}
             value={currentQuote.requestedUSDC}
-            onChange={event => handleInputChange(event, 'requestedUSDC')}
+            onChange={(event) => handleInputChange(event, "requestedUSDC")}
             type="number"
             inputLabel="USDC"
             accessoryLabel={usdcBalanceLabel}
@@ -282,33 +291,32 @@ const SwapModal: React.FC<SwapModalProps> = ({
             label="You send"
             name={`fiatToSend`}
             value={currentQuote.fiatToSend}
-            onChange={event => handleInputChange(event, 'fiatToSend')}
+            onChange={(event) => handleInputChange(event, "fiatToSend")}
             onKeyDown={handleEnterPress}
             type="number"
             inputLabel="$"
             placeholder="0.00"
-            accessoryLabel="via Venmo"
+            accessoryLabel="via&nbsp;Venmo"
             readOnly={true}
           />
           {!isLoggedIn ? (
-            <CustomConnectButton
-              fullWidth={true}
-            />
-          ) : (!isRegistered && currentQuote.requestedUSDC) ? (
-            <Button
-              onClick={navigateToRegistrationHandler}
-            >
+            <CustomConnectButton fullWidth={true} />
+          ) : !isRegistered && currentQuote.requestedUSDC ? (
+            <Button onClick={navigateToRegistrationHandler}>
               Complete Registration
             </Button>
           ) : (
             <CTAButton
-              disabled={currentQuote.depositId === ZERO && currentQuote.fiatToSend === ''}
+              disabled={
+                currentQuote.depositId === ZERO &&
+                currentQuote.fiatToSend === ""
+              }
               loading={isSubmitIntentLoading || isSubmitIntentMining}
               onClick={async () => {
                 try {
                   await writeSubmitIntentAsync?.();
                 } catch (error) {
-                  console.log('writeSubmitIntentAsync failed: ', error);
+                  console.log("writeSubmitIntentAsync failed: ", error);
                 }
               }}
             >
@@ -318,16 +326,12 @@ const SwapModal: React.FC<SwapModalProps> = ({
         </MainContentWrapper>
       </SwapModalContainer>
 
-      {
-        currentIntentHash && (
-          <>
-            <VerticalDivider />
-            <OnRamperIntentTable
-              onIntentRowClick={onIntentTableRowClick}
-            />
-          </>
-        )
-      }
+      {currentIntentHash && (
+        <>
+          <VerticalDivider />
+          <OnRamperIntentTable onIntentRowClick={onIntentTableRowClick} />
+        </>
+      )}
     </Wrapper>
   );
 };
@@ -343,10 +347,10 @@ const Wrapper = styled.div`
 
 const SwapModalContainer = styled(AutoColumn)`
   border-radius: 16px;
-  border: 1px solid #DEE2E6;
+  border: 1px solid #dee2e6;
   padding: 1rem;
   gap: 1rem;
-  background-color: #0D111C;
+  background-color: #0d111c;
   border: 1px solid #98a1c03d;
   box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.25);
 `;
